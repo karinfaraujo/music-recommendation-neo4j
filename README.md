@@ -1,12 +1,14 @@
-# Music Recommendation System using Graph Database (Neo4j)
+# 🎧 Music Recommendation System using Neo4j Graph Database
 
-## 📌 Project Overview
+## 📌 Overview
 
-This project demonstrates how to build a music recommendation system using a Graph Database.
+This project demonstrates how to build a Music Recommendation System using a Graph Database.
 
-Instead of traditional relational databases, graph databases focus on relationships, making them ideal for recommendation engines.
+Graph databases focus on relationships between entities, making them ideal for recommendation engines like those used by Spotify and Netflix.
 
-This project models users, songs, artists, and genres and uses graph algorithms to generate recommendations.
+The system models users, songs, artists, and genres as nodes and their interactions as relationships.
+
+Using Cypher queries, it is possible to analyze listening behavior and recommend new songs.
 
 ---
 
@@ -15,9 +17,9 @@ This project models users, songs, artists, and genres and uses graph algorithms 
 * Neo4j AuraDB
 * Cypher Query Language
 * Graph Data Modeling
-* Graph Data Science (GDS)
-* Arrows.app (Graph Diagram)
 * CSV Data Import
+* Arrows.app (Graph Modeling)
+* GitHub
 
 ---
 
@@ -36,42 +38,26 @@ This project models users, songs, artists, and genres and uses graph algorithms 
 * BY_ARTIST
 * IN_GENRE
 
+---
+
+## 📐 Graph Schema
+
+(User)-[:LISTENED_TO]->(Song)
+
+(Song)-[:BY_ARTIST]->(Artist)
+
+(Song)-[:IN_GENRE]->(Genre)
+
+---
+
+## 📥 Data Import
+
+Data was imported using Cypher LOAD CSV from public GitHub URLs.
+
 Example:
 
-(:User)-[:LISTENED_TO]->(:Song)
-
-(:Song)-[:BY_ARTIST]->(:Artist)
-
-(:Song)-[:IN_GENRE]->(:Genre)
-
-(:Artist)-[:IN_GENRE]->(:Genre)
-
----
-
-## 📥 Data Import (Cypher Script)
-
-### Create Constraints
-
 ```cypher
-CREATE CONSTRAINT user_id IF NOT EXISTS
-FOR (u:User) REQUIRE u.userId IS UNIQUE;
-
-CREATE CONSTRAINT song_id IF NOT EXISTS
-FOR (s:Song) REQUIRE s.songId IS UNIQUE;
-
-CREATE CONSTRAINT artist_id IF NOT EXISTS
-FOR (a:Artist) REQUIRE a.artistId IS UNIQUE;
-
-CREATE CONSTRAINT genre_id IF NOT EXISTS
-FOR (g:Genre) REQUIRE g.genreId IS UNIQUE;
-```
-
----
-
-### Import Users
-
-```cypher
-LOAD CSV WITH HEADERS FROM 'file:///users.csv' AS row
+LOAD CSV WITH HEADERS FROM 'https://raw.githubusercontent.com/.../users.csv' AS row
 CREATE (:User {
 userId: toInteger(row.userId),
 name: row.name
@@ -80,136 +66,79 @@ name: row.name
 
 ---
 
-### Import Artists
+## 🔎 Example Queries
+
+### Graph Visualization
 
 ```cypher
-LOAD CSV WITH HEADERS FROM 'file:///artists.csv' AS row
-CREATE (:Artist {
-artistId: toInteger(row.artistId),
-name: row.name
-});
+MATCH (u:User)-[r:LISTENED_TO]->(s:Song)
+MATCH (s)-[r2:BY_ARTIST]->(a:Artist)
+MATCH (s)-[r3:IN_GENRE]->(g:Genre)
+
+RETURN u, r, s, r2, a, r3, g
+
+LIMIT 50
 ```
 
 ---
-
-### Import Genres
-
-```cypher
-LOAD CSV WITH HEADERS FROM 'file:///genres.csv' AS row
-CREATE (:Genre {
-genreId: toInteger(row.genreId),
-name: row.name
-});
-```
-
----
-
-### Import Songs
-
-```cypher
-LOAD CSV WITH HEADERS FROM 'file:///songs.csv' AS row
-MATCH (a:Artist {artistId: toInteger(row.artistId)})
-MATCH (g:Genre {genreId: toInteger(row.genreId)})
-CREATE (s:Song {
-songId: toInteger(row.songId),
-title: row.title,
-popularity: toInteger(row.popularity)
-})
-CREATE (s)-[:BY_ARTIST]->(a)
-CREATE (s)-[:IN_GENRE]->(g);
-```
-
----
-
-### Import Listen Relationships
-
-```cypher
-LOAD CSV WITH HEADERS FROM 'file:///listens.csv' AS row
-MATCH (u:User {userId: toInteger(row.userId)})
-MATCH (s:Song {songId: toInteger(row.songId)})
-CREATE (u)-[:LISTENED_TO {
-playCount: toInteger(row.playCount)
-}]->(s);
-```
-
----
-
-## 🔎 Basic Queries
 
 ### Most Popular Songs
 
 ```cypher
-MATCH (s:Song)<-[l:LISTENED_TO]-()
-RETURN s.title, COUNT(l) AS listens
-ORDER BY listens DESC
-LIMIT 10;
+MATCH (s:Song)<-[r:LISTENED_TO]-()
+
+RETURN
+s.title AS song,
+COUNT(r) AS total_listens
+
+ORDER BY total_listens DESC
+
+LIMIT 10
 ```
 
 ---
 
-### Recommend Songs Based on Genre
+### Song Recommendation Query
 
 ```cypher
-MATCH (u:User {userId: 1})-[:LISTENED_TO]->(s:Song)-[:IN_GENRE]->(g:Genre)
-MATCH (rec:Song)-[:IN_GENRE]->(g)
-WHERE NOT (u)-[:LISTENED_TO]->(rec)
-RETURN rec.title
-LIMIT 10;
-```
+MATCH (u:User {userId: 10})-[:LISTENED_TO]->(s:Song)-[:IN_GENRE]->(g:Genre)
 
----
+MATCH (recommended:Song)-[:IN_GENRE]->(g)
 
-## 🧠 Graph Data Science
+WHERE NOT (u)-[:LISTENED_TO]->(recommended)
 
-### PageRank Algorithm
+RETURN recommended.title AS recommendation
 
-Find most influential songs:
-
-```cypher
-CALL gds.pageRank.stream({
-nodeProjection: 'Song',
-relationshipProjection: {
-LISTENED_TO: {
-type: 'LISTENED_TO',
-orientation: 'REVERSE'
-}
-}
-})
-YIELD nodeId, score
-RETURN gds.util.asNode(nodeId).title AS song, score
-ORDER BY score DESC
-LIMIT 10;
+LIMIT 10
 ```
 
 ---
 
 ## 📈 Skills Demonstrated
 
-Graph Databases
-
-Data Modeling
-
-Recommendation Systems
+Graph Database Modeling
 
 Cypher Query Language
 
-Graph Algorithms
+Recommendation Systems
 
-Neo4j AuraDB
+Data Analysis
+
+Data Import and Transformation
+
+Graph Visualization
 
 ---
 
-## 📌 Why Graph Database?
+## 🎯 Project Goal
 
-Graph databases allow faster and more accurate recommendations by analyzing relationships between users and content.
+The goal of this project is to demonstrate how graph databases can be used to build recommendation systems based on relationships between users and content.
 
-This is the same approach used by:
+---
 
-Netflix
+## 📷 Screenshots
 
-Spotify
-
-Amazon
+See images folder for graph visualization and query results.
 
 ---
 
@@ -220,6 +149,10 @@ Karin Araujo
 Aspiring Data Analyst
 
 Brazil
+
+GitHub: https://github.com/karinfaraujo
+
+LinkedIn: [www.linkedin.com/in/karinfaraujo](http://www.linkedin.com/in/karinfaraujo)
 
 ---
 
