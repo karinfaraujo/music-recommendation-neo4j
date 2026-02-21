@@ -1,5 +1,9 @@
 # 🎧 Music Recommendation System using Neo4j Graph Database
 
+![Project Preview](https://github.com/karinfaraujo/music-recommendation-neo4j/blob/main/music-recommendation-neo4j/images/graph.png?raw=true)
+
+---
+
 ## 📌 Overview
 
 This project demonstrates how to build a Music Recommendation System using a Graph Database.
